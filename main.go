@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"github.com/inkel/gedis/client"
 	"github.com/kless/term/readline"
@@ -72,8 +73,37 @@ func pr(indent string, res interface{}) {
 	fmt.Printf("%s%s\n", indent, out)
 }
 
+var (
+	hostname = flag.String("h", "127.0.0.1", "Server hostname")
+	port     = flag.Int("p", 6379, "Server port")
+	socket   = flag.String("s", "", "Server socket (overrides hostname and port)")
+	password = flag.String("a", "", "Password to use when connecting to the server")
+	db       = flag.Int("n", 0, "Database number")
+)
+
+func connect() (c client.Client, err error) {
+	if *socket == "" {
+		c, err = client.Dial("tcp", fmt.Sprintf("%s:%d", *hostname, *port))
+	} else {
+		c, err = client.Dial("unix", *socket)
+	}
+
+	if err == nil && *password != "" {
+		_, err = c.Send("AUTH", *password)
+	}
+
+	if err == nil && *db != 0 {
+		// Funny thing, Redis needs this paramenter to be a string
+		_, err = c.Send("SELECT", fmt.Sprintf("%d", *db))
+	}
+
+	return
+}
+
 func main() {
-	c, err := client.Dial("tcp", ":6379")
+	flag.Parse()
+
+	c, err := connect()
 
 	if err != nil {
 		perror(err)
