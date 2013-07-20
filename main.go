@@ -8,8 +8,30 @@ import (
 	"strings"
 )
 
+const (
+	red    = "\033[1;33m"
+	yellow = "\033[1;33m"
+	blue   = "\033[1;34m"
+	cyan   = "\033[0;36m"
+	reset  = "\033[0m"
+
+	cnil = cyan + "nil" + reset
+)
+
 func perror(err error) {
-	fmt.Printf("\033[0;31m%s\033[0m\r\n", err)
+	fmt.Println(cerror(err))
+}
+
+func cerror(err error) string {
+	return red + err.Error() + reset
+}
+
+func cint(n int64) string {
+	return fmt.Sprintf("%s%d%s", yellow, n, reset)
+}
+
+func cstring(str string) string {
+	return blue + str + reset
 }
 
 func tr(split []string) []interface{} {
@@ -21,31 +43,33 @@ func tr(split []string) []interface{} {
 }
 
 func pr(indent string, res interface{}) {
-	var color, format string
+	var out string
 
 	switch res.(type) {
 	case int64:
-		color = "\033[1;33m"
-		format = "%d"
+		out = cint(res.(int64))
 	case string:
-		color = "\033[1;34m"
-		format = "%q"
+		out = cstring(res.(string))
 	default:
 		if res != nil {
 			if arr, ok := res.([]interface{}); ok {
-				for i, d := range arr {
-					pr(fmt.Sprintf("%s%d) ", indent, i), d)
+				if len(arr) > 0 {
+					for i, d := range arr {
+						pr(fmt.Sprintf("%s%d) ", indent, i), d)
+					}
+				} else {
+					fmt.Printf("%s%s(empty)%s\n", indent, cyan, reset)
 				}
 			} else {
 				fmt.Printf("Unexpected! %#v\r\n", res)
 			}
 		} else {
-			fmt.Printf("\033[0;36mnil\033[0m\r\n")
+			fmt.Println(indent + cnil)
 		}
 		return
 	}
 
-	fmt.Printf(fmt.Sprintf("%s%s%s\033[0m\r\n", indent, color, format), res)
+	fmt.Printf("%s%s\n", indent, out)
 }
 
 func main() {
