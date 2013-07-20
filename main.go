@@ -93,7 +93,6 @@ func connect() (c client.Client, err error) {
 	}
 
 	if err == nil && *db != 0 {
-		// Funny thing, Redis needs this paramenter to be a string
 		_, err = c.Send("SELECT", fmt.Sprintf("%d", *db))
 	}
 
